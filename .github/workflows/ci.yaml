@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract Flutter version from app pubspec.yaml
+        id: flutter_version
+        run: |
+          FLUTTER_VERSION=$(grep -m1 '^  flutter:' app/pubspec.yaml | sed 's/.*flutter: "\(.*\)"/\1/' | tr -d ' >=<"')
+          echo "version=$FLUTTER_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.flutter_version.outputs.version }}
+
+      - name: Install dependencies (workspace)
+        run: |
+          dart pub get
+
+      - name: Run tests (core)
+        run: |
+          cd core
+          dart run build_runner build
+          dart test
+
+      - name: Install dependencies (app)
+        run: |
+          cd app
+          flutter pub get
+
+      - name: Run tests (app)
+        run: |
+          cd app
+          flutter test
