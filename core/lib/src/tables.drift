@@ -1,0 +1,43 @@
+CREATE TABLE medication (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    form TEXT NOT NULL CHECK (form IN (
+        'Pill', 'Injection', 'Solution', 'Drops', 'Inhaler', 'Powder', 'Other'
+    )),
+    strength_amount REAL, -- e.g. 200
+    strength_unit TEXT CHECK (strength_unit IN (
+        'mg', 'mcg', 'g', 'ml', 'IU', 'tablet', 'capsule'
+    )),
+    shape TEXT CHECK (shape IN (
+        'round', 'oval', 'capsule', 'oblong', 'triangle', 'rectangle', 'other'
+    )),
+    color TEXT, -- RGB hex code, e.g. "#FFFFFF" for white
+    active BOOLEAN DEFAULT true
+);
+
+CREATE TABLE dose_event (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    medication_id   INTEGER NOT NULL,
+
+    quantity        REAL,    -- NULL if skipped
+
+    scheduled_at    INTEGER, -- epoch seconds (nullable)
+    scheduled_tz    INTEGER, -- minutes offset (nullable)
+
+    taken_at        INTEGER, -- epoch seconds, NULL if skipped
+    taken_tz        INTEGER, -- minutes offset, NULL if skipped
+
+    recorded_at     INTEGER NOT NULL,  -- epoch seconds
+    recorded_tz     INTEGER NOT NULL,  -- minutes offset
+
+    notes           TEXT,
+    FOREIGN KEY (medication_id) REFERENCES medication(id),
+
+    -- sanity checks
+    CHECK ((scheduled_at IS NULL) = (scheduled_tz IS NULL)),
+    CHECK ((taken_at IS NULL) = (taken_tz IS NULL)),
+    CHECK ((taken_at IS NULL) = (quantity IS NULL)),
+    CHECK (taken_tz IS NULL OR taken_tz BETWEEN -1080 AND 1080),
+    CHECK (recorded_tz BETWEEN -1080 AND 1080),
+    CHECK (scheduled_tz IS NULL OR scheduled_tz BETWEEN -1080 AND 1080)
+);
