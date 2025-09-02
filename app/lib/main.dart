@@ -1,13 +1,16 @@
 import 'package:drift/drift.dart' as d;
+import 'package:drift_db_viewer/drift_db_viewer.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:meddy/notifications.dart';
 import 'package:meddy_core/meddy_core.dart';
 
+late final AppDatabase db;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final db = AppDatabase(_openConnection());
+  db = AppDatabase(_openConnection());
   final medId = await db
       .into(db.medication)
       .insert(
@@ -111,6 +114,14 @@ class _MyHomePageState extends State<MyHomePage> {
               child: const Text('Schedule notification in the next minute'),
               onPressed: () async {
                 await scheduleNotification();
+              },
+            ),
+            ElevatedButton(
+              child: Text("DB Viewer"),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => DriftDbViewer(db)),
+                );
               },
             ),
           ],

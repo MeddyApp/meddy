@@ -19,6 +19,7 @@ dependencies:
   timezone: ^0.10.1
   drift: ^2.28.1
   drift_flutter: ^0.2.5
+  drift_db_viewer: ^2.1.0
   meddy_core: any
 
 dev_dependencies:
