@@ -1,8 +1,28 @@
+import 'package:drift/drift.dart' as d;
+import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:meddy/notifications.dart';
+import 'package:meddy_core/meddy_core.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final db = AppDatabase(_openConnection());
+  final medId = await db
+      .into(db.medication)
+      .insert(
+        MedicationCompanion(
+          name: const d.Value('Aspirin'),
+          form: const d.Value('Pill'),
+          strengthAmount: const d.Value(200),
+          strengthUnit: const d.Value('mg'),
+          shape: const d.Value('round'),
+          color: const d.Value('#FFFFFF'),
+          active: const d.Value(true),
+        ),
+      );
+
+  print("MedID: $medId");
 
   await configureLocalTimeZone();
   final launchDetails = await initAsyncNotifications();
@@ -16,6 +36,10 @@ Future<void> main() async {
           : 'Meddy (launched via notification)',
     ),
   );
+}
+
+d.QueryExecutor _openConnection() {
+  return driftDatabase(name: 'meddy', native: const DriftNativeOptions());
 }
 
 class MyApp extends StatelessWidget {
