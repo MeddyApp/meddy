@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -16,7 +17,7 @@ final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 Future<NotificationAppLaunchDetails?> initAsyncNotifications() async {
   // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
   const initializationSettingsAndroid = AndroidInitializationSettings(
-    'app_icon_64',
+    'app_icon',
   );
   final initializationSettingsDarwin = DarwinInitializationSettings();
   final initializationSettingsLinux = LinuxInitializationSettings(
@@ -38,6 +39,7 @@ Future<NotificationAppLaunchDetails?> initAsyncNotifications() async {
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
+    onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
   );
 
   final notificationAppLaunchDetails = !kIsWeb && Platform.isLinux
@@ -47,9 +49,24 @@ Future<NotificationAppLaunchDetails?> initAsyncNotifications() async {
   return notificationAppLaunchDetails;
 }
 
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse notificationResponse) {
+  print(
+    'notification(${notificationResponse.id}) action tapped: '
+    '${notificationResponse.actionId} with'
+    ' payload: ${notificationResponse.payload}',
+  );
+  if (notificationResponse.input?.isNotEmpty ?? false) {
+    print(
+      'notification action tapped with input: ${notificationResponse.input}',
+    );
+  }
+}
+
 void onDidReceiveNotificationResponse(
   NotificationResponse notificationResponse,
 ) async {
+  print("Notification response received");
   final String? payload = notificationResponse.payload;
   if (notificationResponse.payload != null) {
     debugPrint('notification payload: $payload');
@@ -83,6 +100,21 @@ Future<void> scheduleNotification() async {
         channelId,
         channelName,
         channelDescription: 'daily notification description',
+        actions: <AndroidNotificationAction>[
+          AndroidNotificationAction(
+            'id_1',
+            'Action 1',
+            icon: DrawableResourceAndroidBitmap('app_icon'),
+            contextual: true,
+          ),
+          AndroidNotificationAction(
+            'id_2',
+            'Action 2',
+            titleColor: Color.fromARGB(255, 255, 0, 0),
+            icon: DrawableResourceAndroidBitmap('app_icon'),
+            showsUserInterface: true,
+          ),
+        ],
       ),
     ),
     androidScheduleMode: AndroidScheduleMode.alarmClock,
